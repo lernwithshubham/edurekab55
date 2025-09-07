@@ -1,1 +1,2 @@
-This is new change from new commit
+This is new change from new commit.
+
