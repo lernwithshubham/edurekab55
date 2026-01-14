@@ -7,6 +7,7 @@ on:
 
 env:
   NODE_ENV: production # Define a global environment variable
+  APP_VERSION: 1.0.0 # Example of another environment variable
 
 jobs:
   build: # Define a job named 'build'
@@ -14,69 +15,38 @@ jobs:
 
     steps:
       - name: Checkout code # Step to check out the repository code
-        uses: actions/checkout@v3 # Use the official GitHub checkout action
+        uses: actions/checkout@v3
 
-      - name: Debug environment # Add a step to debug the environment
-        run: |
-          echo "Debugging environment..."
-          uname -a
-          node --version || echo "Node.js not installed"
-          npm --version || echo "NPM not installed"
-
-      - name: Set up Node.js # Example of setting up a runtime environment
+      - name: Set up Node.js # Set up Node.js environment
         uses: actions/setup-node@v3
         with:
           node-version: '16'
 
-      - name: Cache dependencies # Example of caching dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Install dependencies
+      - name: Validate environment variables # Echo environment variables
         run: |
-          echo "Installing dependencies..."
-          npm install || exit 1
+          echo "NODE_ENV is set to $NODE_ENV"
+          echo "APP_VERSION is set to $APP_VERSION"
 
-      - name: Run a script # Step to run a custom script
+      - name: Install dependencies # Install project dependencies
+        run: npm install
+
+      - name: Run build script # Run the build script
+        run: npm run build
+
+      - name: Run tests # Run tests
+        run: npm test
+
+      - name: Post-build validation # Validate the build output
         run: |
-          echo "Running custom script..."
-          echo "Hello, GitHub Actions!" || exit 1
+          echo "Validating build output..."
+          if [ ! -d "dist" ]; then
+            echo "Build output directory 'dist' not found!"
+            exit 1
+          fi
+          echo "Build output validated successfully."
 
-      - name: Upload artifact # Step to upload a file as an artifact
-        uses: actions/upload-artifact@v4 # Updated to the latest version
-        with:
-          name: example-artifact
-          path: ./example-file.txt # Replace with the path to your file
-
-  test: # Define a new job named 'test'
-    runs-on: ubuntu-latest
-    needs: build # Make this job dependent on the 'build' job
-
-    strategy: # Example of a matrix build
-      matrix:
-        node-version: [14, 16, 18] # Test against multiple Node.js versions
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node-version }}
-
-      - name: Run tests
-        run: |
-          echo "Running tests on Node.js ${{ matrix.node-version }}..."
-          # Add your test commands here
-          npm test || exit 1
-
-      - name: Upload test results # Example of post-build step
+      - name: Upload build artifact # Upload the build output as an artifact
         uses: actions/upload-artifact@v4
         with:
-          name: test-results
-          path: ./test-results/ # Replace with the path to your test results
+          name: build-artifact
+          path: dist/ # Replace with the path to your build output
