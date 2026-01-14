@@ -6,7 +6,7 @@ on:
       - main # Trigger the workflow on push events to the 'main' branch
 
 env:
-  NODE_ENV: production # Define an environment variable
+  NODE_ENV: production # Define a global environment variable
 
 jobs:
   build: # Define a job named 'build'
@@ -16,11 +16,27 @@ jobs:
       - name: Checkout code # Step to check out the repository code
         uses: actions/checkout@v3 # Use the official GitHub checkout action
 
+      - name: Set up Node.js # Example of setting up a runtime environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Cache dependencies # Example of caching dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm install
+
       - name: Run a script # Step to run a custom script
         run: echo "Hello, GitHub Actions!" # Example script to print a message
 
       - name: Upload artifact # Step to upload a file as an artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4 # Updated to the latest version
         with:
           name: example-artifact
           path: ./example-file.txt # Replace with the path to your file
@@ -28,11 +44,27 @@ jobs:
   test: # Define a new job named 'test'
     runs-on: ubuntu-latest
     needs: build # Make this job dependent on the 'build' job
+
+    strategy: # Example of a matrix build
+      matrix:
+        node-version: [14, 16, 18] # Test against multiple Node.js versions
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+
       - name: Run tests
         run: |
-          echo "Running tests..."
+          echo "Running tests on Node.js ${{ matrix.node-version }}..."
           # Add your test commands here
+
+      - name: Upload test results # Example of post-build step
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: ./test-results/ # Replace with the path to your test results
