@@ -5,6 +5,9 @@ on:
     branches:
       - main # Trigger the workflow on push events to the 'main' branch
 
+env:
+  NODE_ENV: production # Define an environment variable
+
 jobs:
   build: # Define a job named 'build'
     runs-on: ubuntu-latest # Specify the environment to run the job (Ubuntu)
@@ -15,3 +18,21 @@ jobs:
 
       - name: Run a script # Step to run a custom script
         run: echo "Hello, GitHub Actions!" # Example script to print a message
+
+      - name: Upload artifact # Step to upload a file as an artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: example-artifact
+          path: ./example-file.txt # Replace with the path to your file
+
+  test: # Define a new job named 'test'
+    runs-on: ubuntu-latest
+    needs: build # Make this job dependent on the 'build' job
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run tests
+        run: |
+          echo "Running tests..."
+          # Add your test commands here
