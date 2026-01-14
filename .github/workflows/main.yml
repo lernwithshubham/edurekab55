@@ -16,6 +16,13 @@ jobs:
       - name: Checkout code # Step to check out the repository code
         uses: actions/checkout@v3 # Use the official GitHub checkout action
 
+      - name: Debug environment # Add a step to debug the environment
+        run: |
+          echo "Debugging environment..."
+          uname -a
+          node --version || echo "Node.js not installed"
+          npm --version || echo "NPM not installed"
+
       - name: Set up Node.js # Example of setting up a runtime environment
         uses: actions/setup-node@v3
         with:
@@ -30,10 +37,14 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          echo "Installing dependencies..."
+          npm install || exit 1
 
       - name: Run a script # Step to run a custom script
-        run: echo "Hello, GitHub Actions!" # Example script to print a message
+        run: |
+          echo "Running custom script..."
+          echo "Hello, GitHub Actions!" || exit 1
 
       - name: Upload artifact # Step to upload a file as an artifact
         uses: actions/upload-artifact@v4 # Updated to the latest version
@@ -62,6 +73,7 @@ jobs:
         run: |
           echo "Running tests on Node.js ${{ matrix.node-version }}..."
           # Add your test commands here
+          npm test || exit 1
 
       - name: Upload test results # Example of post-build step
         uses: actions/upload-artifact@v4
